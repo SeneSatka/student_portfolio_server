@@ -1,11 +1,11 @@
 {
-  "name": "student_portfilio_server",
+  "name": "student_portfolio_server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "cd src &&node --no-warnings --watch index.js"
   },
   "author": "",
   "license": "ISC",

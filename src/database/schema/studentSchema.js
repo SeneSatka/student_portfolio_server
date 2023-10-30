@@ -8,6 +8,7 @@ export default model(
     surname: { type: String, required: true },
     password: { type: String, required: true },
     token: { type: String, required: true },
+    id: { type: Number, required: true },
     description: { type: String, default: "" },
   })
 );

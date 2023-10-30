@@ -10,6 +10,9 @@ const app = Express();
 
 app
   .use(cors())
-  .use(bodyParser.urlencoded({ extended: true }))
+  .use(bodyParser.urlencoded({ extended: true, limit: "50mb" }))
   .use(router)
-  .listen(3000, () => new Logger({ time: true }).log("http://localhost:3000"));
+  .use("/avatars", Express.static("avatars"))
+  .listen(process.env.port, () =>
+    new Logger({ time: true }).log(`http://localhost:${process.env.port}`)
+  );

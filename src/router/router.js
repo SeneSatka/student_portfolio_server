@@ -1,6 +1,7 @@
 import { Router } from "express";
 import studentSchema from "../database/schema/studentSchema.js";
 import { hash, compare } from "bcrypt";
+import fs from "fs";
 import { Logger } from "@senka/logger";
 const router = Router();
 const logger = new Logger({ time: true });
@@ -42,6 +43,7 @@ router.post("/students", async (req, res) => {
           name: name,
           surname: surname,
           password: hash,
+          id: Math.round(Date.now() * Math.random()),
           token: generateRandomToken(30),
         });
         await student.save().then((a) => {
@@ -52,6 +54,7 @@ router.post("/students", async (req, res) => {
               surname: a.surname,
               email: a.email,
               token: a.token,
+              id: a.id,
             },
           });
         });
@@ -97,13 +100,13 @@ router.get("/students", async (req, res) => {
   try {
     const { token } = req.query;
     const student = await studentSchema.findOne({ token: token });
-
     if (student === null)
       return res.status(404).json({ errors: ["Student not found"] });
     const data = (await studentSchema.findById(student._id)).toJSON();
     delete data.__v;
     delete data.password;
     delete data.token;
+    data.avatarUrl = `http://${req.hostname}:${process.env.port}/avatars/${student.id}.png`;
     res.status(200).json({ messages: ["Data sended"], data: data });
   } catch (err) {
     logger.error(err);
@@ -127,6 +130,7 @@ router.delete("/students", async (req, res) => {
             name: student.name,
             surname: student.surname,
             token: student.token,
+            id: student.id,
             password: student.password,
           })
           .then((d) => {
@@ -137,5 +141,28 @@ router.delete("/students", async (req, res) => {
   } catch (err) {
     logger.error(err);
   }
+});
+
+router.post("/avatar", async (req, res) => {
+  const base64Image = req.body.image.replace(/^data:image\/\w+;base64,/, "");
+  await studentSchema.findOne({ token: req.body.token }).then((student) => {
+    fs.writeFile(
+      `./avatars/${student.id}.png`,
+      base64Image,
+      { encoding: "base64" },
+      function (err) {
+        if (err) {
+          res.status(500).json({
+            errors: [
+              "An unknown error was encountered",
+              "Avatar update failed",
+            ],
+          });
+        } else {
+          res.status(200).json({ messages: ["Avatar updated successfully"] });
+        }
+      }
+    );
+  });
 });
 export default router;
